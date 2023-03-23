@@ -1,0 +1,16 @@
+.node{
+	margin:0;
+	padding:0;
+	border:none;
+	outline:1px solid #000;
+	display:inline-block;
+    width:22px;
+    height: 22px;
+}
+.node-fin {
+	background-color: blue;
+}
+
+.node-start {
+	background-color: green;
+}
