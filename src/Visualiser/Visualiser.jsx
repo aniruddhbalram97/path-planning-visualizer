@@ -3,7 +3,7 @@ import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Modal from 'react-bootstrap/Modal';
+import Modal from "react-bootstrap/Modal";
 import Node from "./Node/Node";
 import Dropdown from "react-bootstrap/Dropdown";
 import { dijkstra, getNodesInShortestPathOrder } from "../algorithms/dijkstra";
@@ -29,20 +29,39 @@ export default class PathfindingVisualizer extends Component {
       START_NODE_COL: "",
       FINISH_NODE_ROW: "",
       FINISH_NODE_COL: "",
+      startNode: null,
+      endNode: null,
+      show: "",
     };
+    this.setStartNode = this.setStartNode.bind(this);
+    this.setEndNode = this.setEndNode.bind(this);
   }
 
   componentDidMount() {
     const grid = this.getInitialGrid();
-    this.setState({ grid });
+    this.setState({ grid, show: true });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.startNode != prevState.startNode) {
+      let grid = this.getInitialGrid();
+      this.setState({ grid: grid });
+    }
+    if(this.state.endNode!=prevState.endNode) {
+      let grid = this.getInitialGrid();
+      this.setState({grid:grid})
+    }
   }
 
   createNode = (col, row) => {
     return {
       col,
       row,
-      isStart: row === START_NODE_ROW && col === START_NODE_COL,
-      isFinish: row === FINISH_NODE_ROW && col === FINISH_NODE_COL,
+      isStart:
+        row === this.state.START_NODE_ROW && col === this.state.START_NODE_COL,
+      isFinish:
+        row === this.state.FINISH_NODE_ROW &&
+        col === this.state.FINISH_NODE_COL,
       distance: Infinity,
       isVisited: false,
       isWall: false,
@@ -90,6 +109,22 @@ export default class PathfindingVisualizer extends Component {
     this.setState({ grid: newGrid });
   }
 
+  setStartNode(row, col) {
+    console.log("start node", row, col);
+    this.setState({
+      START_NODE_ROW: row,
+      START_NODE_COL: col,
+      startNode: true,
+    });
+  }
+  setEndNode(row, col) {
+    console.log("end node", row, col);
+    this.setState({
+      FINISH_NODE_ROW: row,
+      FINISH_NODE_COL: col,
+      endNode: true,
+    });
+  }
   handleMouseUp() {
     this.setState({ mouseIsPressed: false });
   }
@@ -122,8 +157,12 @@ export default class PathfindingVisualizer extends Component {
 
   visualize() {
     const { grid } = this.state;
-    const startNode = grid[START_NODE_ROW][START_NODE_COL];
-    const finishNode = grid[FINISH_NODE_ROW][FINISH_NODE_COL];
+    console.log("grid", grid);
+    const startNode =
+      grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
+    const finishNode =
+      grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
+    console.log("visualiser", startNode, finishNode);
     let visitedNodesInOrder = "";
     switch (this.state.algo) {
       case "BFS": {
@@ -157,19 +196,22 @@ export default class PathfindingVisualizer extends Component {
     return (
       <>
         <Container fluid>
-          <Modal show={show} onHide={handleClose}>
+          <Modal
+            show={this.state.show}
+            onHide={() => this.setState({ show: false })}
+          >
             <Modal.Header closeButton>
-              <Modal.Title>Modal heading</Modal.Title>
+              <Modal.Title>Start and End Goals</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-              Woohoo, you're reading this text in a modal!
+              Click on the grid to set the Start and End Goals
             </Modal.Body>
             <Modal.Footer>
-              <Button variant="secondary" onClick={handleClose}>
+              <Button
+                variant="secondary"
+                onClick={() => this.setState({ show: false })}
+              >
                 Close
-              </Button>
-              <Button variant="primary" onClick={handleClose}>
-                Save Changes
               </Button>
             </Modal.Footer>
           </Modal>
@@ -234,6 +276,11 @@ export default class PathfindingVisualizer extends Component {
                             isStart={isStart}
                             isWall={isWall}
                             mouseIsPressed={mouseIsPressed}
+                            startNode={this.state.startNode}
+                            endNode={this.state.endNode}
+                            node={node}
+                            setStartNode={this.setStartNode}
+                            setEndNode={this.setEndNode}
                             onMouseDown={(row, col) =>
                               this.handleMouseDown(row, col)
                             }
