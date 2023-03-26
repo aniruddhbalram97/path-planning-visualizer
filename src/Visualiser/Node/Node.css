@@ -1,10 +1,11 @@
 .node {
-	width: 17px;
-	height: 17px;
+	/* width: 27px;
+	height: 27px; */
 	outline: 1px solid rgb(175, 216, 248);
 	display: inline-block;
+	line-height: 0;
   }
-  
+
   .node-finish {
 	background-color: red;
   }
