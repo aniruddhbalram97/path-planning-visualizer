@@ -11,7 +11,6 @@ clickNode(){
     node.isFinish = false;
   }
   else if (startNode && !endNode) {
-    console.log(row, col);
     setEndNode(row, col);
     node.isStart = false;
     node.isFinish = true;
@@ -21,6 +20,34 @@ clickNode(){
     return
   }
 }
+ mouseDown(){
+  const {startNode, endNode, row, col, onMouseDown} = this.props;
+  if(startNode && endNode) {
+    onMouseDown(row, col)
+  }
+  else {
+    return
+  }
+ }
+ mouseEnter(){
+  const {startNode, endNode, row, col, onMouseEnter} = this.props;
+  if(startNode && endNode) {
+    onMouseEnter(row, col)
+  }
+  else {
+    return
+  }
+ }
+
+ mouseUp(){
+  const {startNode, endNode, row, col, onMouseUp} = this.props;
+  if(startNode && endNode) {
+    onMouseUp(row, col)
+  }
+  else {
+    return
+  }
+ }
   render() {
     const {
       col,
@@ -31,6 +58,7 @@ clickNode(){
       onMouseEnter,
       onMouseUp,
       row,
+      nodeSize
     } = this.props;
     const extraClassName = isFinish
       ? 'node-finish'
@@ -43,12 +71,13 @@ clickNode(){
 
     return (
       <div
+        style={{height:nodeSize, width:nodeSize}}
         id={`node-${row}-${col}`}
         onClick={()=>this.clickNode()}
         className={`node ${extraClassName}`}
-        onMouseDown={() => onMouseDown(row, col)}
-        onMouseEnter={() => onMouseEnter(row, col)}
-        onMouseUp={() => onMouseUp()}></div>
+        onMouseDown={() => this.mouseDown(row, col)}
+        onMouseEnter={() => this.mouseEnter(row, col)}
+        onMouseUp={() => this.mouseUp()}></div>
     );
   }
 }
