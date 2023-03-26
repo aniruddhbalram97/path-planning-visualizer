@@ -5,18 +5,17 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Modal from "react-bootstrap/Modal";
 import Node from "./Node/Node";
-import Dropdown from "react-bootstrap/Dropdown";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
+import NavDropdown from "react-bootstrap/NavDropdown";
+import Form from "react-bootstrap/Form";
 import { dijkstra, getNodesInShortestPathOrder } from "../algorithms/dijkstra";
+import Logo from "../files/logo.png";
 import { BFS } from "../algorithms/bfs";
 import { DFS } from "../algorithms/dfs";
 import { astar } from "../algorithms/astar";
 
 import "./Visualiser.css";
-
-const START_NODE_ROW = 10;
-const START_NODE_COL = 15;
-const FINISH_NODE_ROW = 10;
-const FINISH_NODE_COL = 35;
 
 export default class PathfindingVisualizer extends Component {
   constructor() {
@@ -24,32 +23,66 @@ export default class PathfindingVisualizer extends Component {
     this.state = {
       grid: [],
       mouseIsPressed: false,
-      algo: "",
+      algo: "Choose Algorithm",
       START_NODE_ROW: "",
       START_NODE_COL: "",
       FINISH_NODE_ROW: "",
       FINISH_NODE_COL: "",
       startNode: null,
       endNode: null,
+      modalTitle: "Start & End Goals",
+      modalBody: "Click on Nodes to set Start and End Nodes",
       show: "",
+      visitedNodesInOrder: [],
+      nodesInShortestPathOrder: [],
+      nodeSize: "",
     };
     this.setStartNode = this.setStartNode.bind(this);
     this.setEndNode = this.setEndNode.bind(this);
+    this.updateNodeSize = this.updateNodeSize.bind(this);
   }
 
   componentDidMount() {
     const grid = this.getInitialGrid();
+    this.updateNodeSize();
+    window.addEventListener("resize", this.updateNodeSize);
     this.setState({ grid, show: true });
   }
-
+  updateNodeSize() {
+    let width = window.innerWidth - 100;
+    let height = window.innerHeight - 56 - 35;
+    let nodeWidth = width / 50;
+    let nodeHeight = height / 20;
+    if (nodeWidth < nodeHeight) {
+      this.setState({ nodeSize: nodeWidth, height: height, width: width });
+    } else {
+      this.setState({ nodeSize: nodeHeight, height: height, width: width });
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateNodeSize);
+  }
   componentDidUpdate(prevProps, prevState) {
     if (this.state.startNode != prevState.startNode) {
       let grid = this.getInitialGrid();
       this.setState({ grid: grid });
     }
-    if(this.state.endNode!=prevState.endNode) {
+    if (this.state.endNode != prevState.endNode) {
       let grid = this.getInitialGrid();
-      this.setState({grid:grid})
+      this.setState({ grid: grid });
+    }
+    if (
+      this.state.endNode &&
+      this.state.startNode &&
+      this.state.startNode == prevState.startNode &&
+      this.state.endNode != prevState.endNode
+    ) {
+      this.setState({
+        modalTitle: "Great! Now set the obstacle walls and choose an algorithm",
+        modalBody:
+          "Hold click and drag around the grid to set walls. Then choose the algorithm",
+        show: true,
+      });
     }
   }
 
@@ -95,6 +128,49 @@ export default class PathfindingVisualizer extends Component {
 
   resetMap = () => {
     const grid = this.getInitialGrid();
+    const { visitedNodesInOrder, nodesInShortestPathOrder } = this.state;
+    if (visitedNodesInOrder) {
+      for (let i = 0; i < visitedNodesInOrder.length; i++) {
+        setTimeout(() => {
+          const node = visitedNodesInOrder[i];
+          if (
+            node.row == this.state.START_NODE_ROW &&
+            node.col == this.state.START_NODE_COL
+          ) {
+            console.log("start node");
+          } else if (
+            node.row == this.state.FINISH_NODE_ROW &&
+            node.col == this.state.FINISH_NODE_COL
+          ) {
+            console.log("finish node");
+          } else {
+            document.getElementById(`node-${node.row}-${node.col}`).className =
+              "node";
+          }
+        },  i);
+      }
+    }
+    if (nodesInShortestPathOrder) {
+      for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
+        setTimeout(() => {
+          const node = nodesInShortestPathOrder[i];
+          if (
+            node.row == this.state.START_NODE_ROW &&
+            node.col == this.state.START_NODE_COL
+          ) {
+            console.log("start node");
+          } else if (
+            node.row == this.state.FINISH_NODE_ROW &&
+            node.col == this.state.FINISH_NODE_COL
+          ) {
+            console.log("finish node");
+          } else {
+            document.getElementById(`node-${node.row}-${node.col}`).className =
+              "node";
+          }
+        }, i);
+      }
+    }
     this.setState({ grid });
   };
 
@@ -110,7 +186,6 @@ export default class PathfindingVisualizer extends Component {
   }
 
   setStartNode(row, col) {
-    console.log("start node", row, col);
     this.setState({
       START_NODE_ROW: row,
       START_NODE_COL: col,
@@ -118,7 +193,6 @@ export default class PathfindingVisualizer extends Component {
     });
   }
   setEndNode(row, col) {
-    console.log("end node", row, col);
     this.setState({
       FINISH_NODE_ROW: row,
       FINISH_NODE_COL: col,
@@ -139,8 +213,20 @@ export default class PathfindingVisualizer extends Component {
       }
       setTimeout(() => {
         const node = visitedNodesInOrder[i];
-        document.getElementById(`node-${node.row}-${node.col}`).className =
-          "node node-visited";
+        if (
+          node.row == this.state.START_NODE_ROW &&
+          node.col == this.state.START_NODE_COL
+        ) {
+          console.log("start node");
+        } else if (
+          node.row == this.state.FINISH_NODE_ROW &&
+          node.col == this.state.FINISH_NODE_COL
+        ) {
+          console.log("finish node");
+        } else {
+          document.getElementById(`node-${node.row}-${node.col}`).className =
+            "node node-visited";
+        }
       }, 10 * i);
     }
   }
@@ -149,63 +235,146 @@ export default class PathfindingVisualizer extends Component {
     for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
       setTimeout(() => {
         const node = nodesInShortestPathOrder[i];
-        document.getElementById(`node-${node.row}-${node.col}`).className =
-          "node node-shortest-path";
+        if (
+          node.row == this.state.START_NODE_ROW &&
+          node.col == this.state.START_NODE_COL
+        ) {
+          console.log("start node");
+        } else if (
+          node.row == this.state.FINISH_NODE_ROW &&
+          node.col == this.state.FINISH_NODE_COL
+        ) {
+          console.log("finish node");
+        } else {
+          document.getElementById(`node-${node.row}-${node.col}`).className =
+            "node node-shortest-path";
+        }
       }, 50 * i);
     }
   }
 
   visualize() {
-    const { grid } = this.state;
-    console.log("grid", grid);
-    const startNode =
-      grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
-    const finishNode =
-      grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
-    console.log("visualiser", startNode, finishNode);
-    let visitedNodesInOrder = "";
-    switch (this.state.algo) {
-      case "BFS": {
-        visitedNodesInOrder = BFS(grid, startNode, finishNode);
-        break;
+    const { startNode, endNode } = this.state;
+    if (startNode && endNode && this.state.algo != "Choose Algorithm") {
+      const { grid } = this.state;
+      const startNode_ =
+        grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
+      const finishNode_ =
+        grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
+      let visitedNodesInOrder = [];
+      switch (this.state.algo) {
+        case "BFS": {
+          visitedNodesInOrder = BFS(grid, startNode_, finishNode_);
+          break;
+        }
+        case "DFS": {
+          visitedNodesInOrder = DFS(grid, startNode_, finishNode_);
+          break;
+        }
+        case "Dijkstra": {
+          visitedNodesInOrder = dijkstra(grid, startNode_, finishNode_);
+          break;
+        }
+        case "A*": {
+          visitedNodesInOrder = astar(grid, startNode_, finishNode_);
+          break;
+        }
+        default: {
+          console.log("The algorithm hasn't been selected");
+        }
       }
-      case "DFS": {
-        visitedNodesInOrder = DFS(grid, startNode, finishNode);
-        break;
-      }
-      case "Dijkstra": {
-        visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
-        break;
-      }
-      case "AStar": {
-        visitedNodesInOrder = astar(grid, startNode, finishNode);
-        break;
-      }
-      default: {
-        console.log("The algorithm hasn't been selected");
-      }
+      this.setState({ visitedNodesInOrder: visitedNodesInOrder });
+      const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode_);
+      this.setState({ nodesInShortestPathOrder: nodesInShortestPathOrder });
+      this.animate(visitedNodesInOrder, nodesInShortestPathOrder);
+    } else {
+      this.setState({
+        modalTitle: "You have not set an Algorithm!",
+        modalBody: "Please choose an Algorithm before Visualising",
+        show: true,
+      });
     }
-
-    const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
-    this.animate(visitedNodesInOrder, nodesInShortestPathOrder);
   }
 
   render() {
     const { grid, mouseIsPressed } = this.state;
-
     return (
       <>
+        <Navbar bg="dark" variant="dark" expand="lg">
+          <Container>
+            <Navbar.Brand>
+              <img
+                alt="Page Logo"
+                src={Logo}
+                width="30"
+                height="30"
+                className="d-inline-block align-top"
+              />{" "}
+              PathVis
+            </Navbar.Brand>
+            <Navbar.Toggle aria-controls="basic-navbar-nav" />
+            <Navbar.Collapse id="basic-navbar-nav">
+              <Nav className="me-auto">
+                <NavDropdown
+                  title={this.state.algo}
+                  id={`${
+                    this.state.algo === "Choose Algorithm" ? "" : "green-"
+                  }nav-dropdown`}
+                >
+                  <NavDropdown.Item
+                    onClick={() => this.setState({ algo: "BFS" })}
+                  >
+                    BFS
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    onClick={() => this.setState({ algo: "DFS" })}
+                  >
+                    DFS
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    onClick={() => this.setState({ algo: "Dijkstra" })}
+                  >
+                    Dijkstra
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    onClick={() => this.setState({ algo: "A*" })}
+                  >
+                    A*
+                  </NavDropdown.Item>
+                </NavDropdown>
+                <Nav.Link
+                  style={{ color: "#D0312D" }}
+                  onClick={() => this.resetMap()}
+                >
+                  Clear Map
+                </Nav.Link>
+              </Nav>
+              <Form className="d-flex">
+                <Button
+                  variant={`${
+                    this.state.startNode &&
+                    this.state.endNode &&
+                    this.state.algo != "Choose Algorithm"
+                      ? "success"
+                      : "secondary"
+                  }`}
+                  onClick={() => this.visualize()}
+                >
+                  Visualize
+                </Button>
+              </Form>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
         <Container fluid>
           <Modal
             show={this.state.show}
             onHide={() => this.setState({ show: false })}
           >
             <Modal.Header closeButton>
-              <Modal.Title>Start and End Goals</Modal.Title>
+              <Modal.Title>{this.state.modalTitle}</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-              Click on the grid to set the Start and End Goals
-            </Modal.Body>
+            <Modal.Body>{this.state.modalBody}</Modal.Body>
             <Modal.Footer>
               <Button
                 variant="secondary"
@@ -215,57 +384,15 @@ export default class PathfindingVisualizer extends Component {
               </Button>
             </Modal.Footer>
           </Modal>
-          <Row>
-            <Col>
-              <Dropdown>
-                <Dropdown.Toggle variant="success" id="dropdown-basic">
-                  Algorithms
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => this.setState({ algo: "BFS" })}>
-                    BFS
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={() => this.setState({ algo: "DFS" })}>
-                    DFS
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    onClick={() => this.setState({ algo: "Dijkstra" })}
-                  >
-                    Dijkstra
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    onClick={() => this.setState({ algo: "AStar" })}
-                  >
-                    A Star
-                  </Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
-            </Col>
-            <Col>
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => this.visualize()}
-              >
-                Visualize
-              </Button>
-            </Col>
-            <Col>
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={() => this.resetMap()}
-              >
-                Reset Map
-              </Button>
-            </Col>
-          </Row>
-          <Row>
+          <Row
+            className="align-items-center"
+            style={{ height: this.state.height }}
+          >
             <Col>
               <div className="grid">
                 {grid.map((row, rowIdx) => {
                   return (
-                    <div key={rowIdx}>
+                    <div key={rowIdx} className="grid-row">
                       {row.map((node, nodeIdx) => {
                         const { row, col, isFinish, isStart, isWall } = node;
                         return (
@@ -289,6 +416,7 @@ export default class PathfindingVisualizer extends Component {
                             }
                             onMouseUp={() => this.handleMouseUp()}
                             row={row}
+                            nodeSize={this.state.nodeSize}
                           ></Node>
                         );
                       })}
