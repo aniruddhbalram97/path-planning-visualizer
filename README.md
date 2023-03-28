@@ -1,6 +1,6 @@
 ## PathVis
 
-Based visualizer for Path-Planning Algorithms developed using ReactJS. 
+Basic visualizer for Path-Planning Algorithms developed using ReactJS. 
 
 ### Dependencies:
 1) NodeJS 
@@ -33,9 +33,10 @@ npm start
 ![Alt Text](./src/PathVis_tutorial.gif)
 
 ### Future Work:
-1) Add more Algorithms
+1) Fix DFS 
 2) Ability to clear start and end goals
 3) Pre-defined maps
 4) Add a defined tutorial
 5) Show time-taken for completion
 6) Add Modals explaining some algorithms
+7) Add more algorithms
