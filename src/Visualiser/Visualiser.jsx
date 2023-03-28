@@ -173,7 +173,51 @@ export default class PathfindingVisualizer extends Component {
     }
     this.setState({ grid });
   };
-
+clearVisuals() {
+  const { visitedNodesInOrder, nodesInShortestPathOrder } = this.state;
+    if (visitedNodesInOrder) {
+      for (let i = 0; i < visitedNodesInOrder.length; i++) {
+        setTimeout(() => {
+          const node = visitedNodesInOrder[i];
+          if (
+            node.row == this.state.START_NODE_ROW &&
+            node.col == this.state.START_NODE_COL
+          ) {
+            console.log("start node");
+          } else if (
+            node.row == this.state.FINISH_NODE_ROW &&
+            node.col == this.state.FINISH_NODE_COL
+          ) {
+            console.log("finish node");
+          } else {
+            document.getElementById(`node-${node.row}-${node.col}`).className =
+              "node";
+          }
+        },  i);
+      }
+    }
+    if (nodesInShortestPathOrder) {
+      for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
+        setTimeout(() => {
+          const node = nodesInShortestPathOrder[i];
+          if (
+            node.row == this.state.START_NODE_ROW &&
+            node.col == this.state.START_NODE_COL
+          ) {
+            console.log("start node");
+          } else if (
+            node.row == this.state.FINISH_NODE_ROW &&
+            node.col == this.state.FINISH_NODE_COL
+          ) {
+            console.log("finish node");
+          } else {
+            document.getElementById(`node-${node.row}-${node.col}`).className =
+              "node";
+          }
+        }, i);
+      }
+    }
+}
   handleMouseDown(row, col) {
     const newGrid = this.getNewGridWithWallToggled(this.state.grid, row, col);
     this.setState({ mouseIsPressed: true });
@@ -261,10 +305,14 @@ export default class PathfindingVisualizer extends Component {
         grid[this.state.START_NODE_ROW][this.state.START_NODE_COL];
       const finishNode_ =
         grid[this.state.FINISH_NODE_ROW][this.state.FINISH_NODE_COL];
+      let values =[]
       let visitedNodesInOrder = [];
+      let solFound = false;
       switch (this.state.algo) {
         case "BFS": {
-          visitedNodesInOrder = BFS(grid, startNode_, finishNode_);
+          values = BFS(grid, startNode_, finishNode_);
+          solFound = values[0];
+          visitedNodesInOrder = values[1];
           break;
         }
         case "DFS": {
@@ -272,7 +320,9 @@ export default class PathfindingVisualizer extends Component {
           break;
         }
         case "Dijkstra": {
-          visitedNodesInOrder = dijkstra(grid, startNode_, finishNode_);
+          values = dijkstra(grid, startNode_, finishNode_);
+          solFound = values[0];
+          visitedNodesInOrder = values[1];
           break;
         }
         case "A*": {
@@ -287,6 +337,12 @@ export default class PathfindingVisualizer extends Component {
       const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode_);
       this.setState({ nodesInShortestPathOrder: nodesInShortestPathOrder });
       this.animate(visitedNodesInOrder, nodesInShortestPathOrder);
+      if(solFound) {
+        this.setState({modalTitle:"Solution found!", modalBody:"The path connects start and end nodes!", show:true})
+      }
+      else{
+        this.setState({modalTitle:"Solution not found!", modalBody:"The path must be completely blocked", show:true})
+      }
     } else {
       this.setState({
         modalTitle: "You have not set an Algorithm!",
