@@ -14,6 +14,7 @@ import Logo from "../files/logo.png";
 import { BFS } from "../algorithms/bfs";
 import { DFS } from "../algorithms/dfs";
 import { astar } from "../algorithms/astar";
+import {greedy_best_search} from '../algorithms/greedy_best_search'
 
 import "./Visualiser.css";
 
@@ -99,6 +100,7 @@ export default class PathfindingVisualizer extends Component {
       isVisited: false,
       isWall: false,
       previousNode: null,
+      cost: Infinity, 
     };
   };
 
@@ -325,8 +327,16 @@ clearVisuals() {
           visitedNodesInOrder = values[1];
           break;
         }
+        case "Greedy Best Search": {
+          values = greedy_best_search(grid, startNode_, finishNode_);
+          solFound = values[0];
+          visitedNodesInOrder = values[1];
+          break;
+        }
         case "A*": {
-          visitedNodesInOrder = astar(grid, startNode_, finishNode_);
+          values = astar(grid, startNode_, finishNode_);
+          solFound = values[0];
+          visitedNodesInOrder = values[1];
           break;
         }
         default: {
@@ -396,6 +406,11 @@ clearVisuals() {
                     onClick={() => this.setState({ algo: "A*" })}
                   >
                     A*
+                  </NavDropdown.Item>
+                  <NavDropdown.Item
+                    onClick={() => this.setState({ algo: "Greedy Best Search" })}
+                  >
+                    Greedy Best Search
                   </NavDropdown.Item>
                 </NavDropdown>
                 <Nav.Link
